@@ -22,7 +22,8 @@ RUN apk add --no-cache \
     iptables \
     iproute2 \
     ip6tables \
-    qrencode \
+    libqrencode \
+    libqrencode-tools \
     libcap \
     procps
 
