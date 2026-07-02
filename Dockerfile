@@ -1,40 +1,45 @@
-FROM ubuntu:22.04
+FROM golang:1.22-alpine AS builder
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    AWG_SERVER_PORT=51820 \
-    AWG_EXTERNAL_IP=127.0.0.1 \
-    AWG_INTERNAL_SUBNET=10.8.0.0/16
+# Установка зависимостей для сборки
+RUN apk add --no-cache git make gcc musl-dev linux-headers
 
-# Установка необходимых пакетов
-RUN apt-get update && apt-get install -y \
+# Клонирование репозитория
+WORKDIR /build
+RUN git clone https://github.com/amnezia-vpn/amneziawg-go.git .
+
+# Сборка
+RUN make
+
+# Финальный образ
+FROM alpine:3.19
+
+RUN apk add --no-cache \
+    bash \
     curl \
-    wget \
     iptables \
-    net-tools \
     iproute2 \
     qrencode \
-    ca-certificates \
-    wireguard-tools \
-    && rm -rf /var/lib/apt/lists/*
+    libcap
 
-# Скачивание готовых бинарников AmneziaWG с GitHub Releases
-RUN mkdir -p /tmp/awg && \
-    cd /tmp/awg && \
-    wget -q https://github.com/amnezia-vpn/amneziawg-linux/releases/download/v1.0.4/amneziawg-linux-amd64.tar.gz && \
-    tar -xzf amneziawg-linux-amd64.tar.gz && \
-    cp awg /usr/bin/awg && \
-    cp awg-quick /usr/bin/awg-quick && \
-    chmod +x /usr/bin/awg /usr/bin/awg-quick && \
-    rm -rf /tmp/awg
+# Копирование бинарников из builder
+COPY --from=builder /build/amneziawg-go /usr/bin/amneziawg-go
+COPY --from=builder /build/tools/awg /usr/bin/awg
+COPY --from=builder /build/tools/awg-quick /usr/bin/awg-quick
+
+# Даём права на выполнение
+RUN chmod +x /usr/bin/amneziawg-go /usr/bin/awg /usr/bin/awg-quick
+
+# Даём бинарнику права на работу с сетью без root
+RUN setcap cap_net_admin+ep /usr/bin/amneziawg-go
 
 # Создание рабочих директорий
 RUN mkdir -p /opt/amnezia/awg /etc/wireguard
 
-# Копирование скрипта запуска
+# Копирование entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE ${AWG_SERVER_PORT}/udp
+EXPOSE 51820/udp
 
 VOLUME ["/opt/amnezia/awg", "/etc/wireguard"]
 
