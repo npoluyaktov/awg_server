@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS builder-go
+FROM golang:1.24-alpine AS builder-go
 
 # Установка зависимостей для сборки
 RUN apk add --no-cache git make gcc musl-dev linux-headers
