@@ -11,6 +11,7 @@ RUN make
 # Сборка amneziawg-tools
 WORKDIR /build/awg-tools
 RUN git clone https://github.com/amnezia-vpn/amneziawg-tools.git .
+WORKDIR /build/awg-tools/src
 RUN make
 
 # Финальный образ
