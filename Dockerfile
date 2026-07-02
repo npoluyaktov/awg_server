@@ -32,9 +32,9 @@ RUN apk add --no-cache \
 COPY --from=builder-go /build/awg-go/amneziawg-go /usr/bin/amneziawg-go
 
 # Копирование бинарников amneziawg-tools
-COPY --from=builder-go /build/awg-tools/awg /usr/bin/awg
-COPY --from=builder-go /build/awg-tools/awg-quick /usr/bin/awg-quick
-COPY --from=builder-go /build/awg-tools/bash-completion/awg /usr/share/bash-completion/completions/awg 2>/dev/null || true
+COPY --from=builder-go /build/awg-tools/src/awg /usr/bin/awg
+COPY --from=builder-go /build/awg-tools/src/awg-quick /usr/bin/awg-quick
+COPY --from=builder-go /build/awg-tools/src/bash-completion/awg /usr/share/bash-completion/completions/awg 2>/dev/null || true
 
 # Права на выполнение
 RUN chmod +x /usr/bin/amneziawg-go /usr/bin/awg /usr/bin/awg-quick
